@@ -1,13 +1,13 @@
-<h1 align="center">Lamp Station 13 Codebase</h1>
+<h1 align="center">BeeStation 13 Codebase</h1>
 
 
 [![forthebadge](https://forthebadge.com/images/badges/built-with-resentment.svg)](https://forthebadge.com) [![forthebadge](https://forthebadge.com/images/badges/contains-technical-debt.svg)](https://user-images.githubusercontent.com/8171642/50290880-ffef5500-043a-11e9-8270-a2e5b697c86c.png) [![forinfinityandbyond](https://user-images.githubusercontent.com/5211576/29499758-4efff304-85e6-11e7-8267-62919c3688a9.gif)](https://www.reddit.com/r/SS13/comments/5oplxp/what_is_the_main_problem_with_byond_as_an_engine/dclbu1a)
 [![Build Status](https://github.com/BeeStation/BeeStation-Hornet/workflows/Run%20tests/badge.svg)](https://github.com/BeeStation/BeeStation-Hornet/actions?query=workflow%3A%22Run+tests%22)
 ![Open Issues](https://isitmaintained.com/badge/open/BeeStation/BeeStation-Hornet.svg)
 
-**Discord:** https://discord.gg/k9bQuZYFqA
-**Code:** https://github.com/lampstation/lampstation-luna
-**Wiki(Bee):** https://wiki.beestation13.com/view/Main_Page
+**Website:** http://beestation13.com
+**Code:** https://github.com/beestation/beestation-hornet
+**Wiki:** https://wiki.beestation13.com/view/Main_Page
 
 
 ## DOWNLOADING
@@ -32,7 +32,7 @@ docker run -d -p <your port>:1337 -v /path/to/your/config:/beestation/config -v 
 
 **You can no longer compile the codebase simply through Dream Maker**.
 
-**Building Lampstation in Dream Maker directly is now deprecated and might produce errors**, such as `'tgui.bundle.js': cannot find file`.
+**Building Beestation in Dream Maker directly is now deprecated and might produce errors**, such as `'tgui.bundle.js': cannot find file`.
 
 ### Building with VSCode (Preferred)
 
@@ -102,7 +102,7 @@ https://github.com/tgstation/tgstation-server
 
 ## MAPS
 
-Lampstation currently comes equipped with these maps.
+BeeStation currently comes equipped with these maps.
 
 * [DeltaStation (default)](https://wiki.beestation13.com/view/DeltaStation)
 * [BoxStation](https://wiki.beestation13.com/view/Boxstation)
