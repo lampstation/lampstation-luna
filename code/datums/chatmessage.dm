@@ -30,25 +30,18 @@
 
 #define BUCKET_LIMIT (world.time + TICKS2DS(min(BUCKET_LEN - (SSrunechat.practical_offset - DS2TICKS(world.time - SSrunechat.head_offset)) - 1, BUCKET_LEN - 1)))
 #define BALLOON_TEXT_WIDTH 200
-#define BALLOON_TEXT_SPAWN_TIME (0.1 SECONDS)
-#define BALLOON_TEXT_FADE_TIME (0.1 SECONDS)
-#define BALLOON_TEXT_FULLY_VISIBLE_TIME (1.5 SECONDS)
+#define BALLOON_TEXT_SPAWN_TIME (0.3 SECONDS)
+#define BALLOON_TEXT_FADE_TIME (0.4 SECONDS)
+#define BALLOON_TEXT_FULLY_VISIBLE_TIME (0.9 SECONDS)
 #define BALLOON_TEXT_TOTAL_LIFETIME(mult) (BALLOON_TEXT_SPAWN_TIME + BALLOON_TEXT_FULLY_VISIBLE_TIME*mult + BALLOON_TEXT_FADE_TIME)
 /// The increase in duration per character in seconds
 #define BALLOON_TEXT_CHAR_LIFETIME_INCREASE_MULT (0.05)
 /// The amount of characters needed before this increase takes into effect
 #define BALLOON_TEXT_CHAR_LIFETIME_INCREASE_MIN 10
 
-#define COLOR_JOB_UNKNOWN "#dda583"
 #define COLOR_PERSON_UNKNOWN "#999999"
 #define COLOR_CHAT_EMOTE "#727272"
 
-//For jobs that aren't roundstart but still need colours
-GLOBAL_LIST_INIT(job_colors_pastel, list(
-	"Prisoner" = 		"#d38a5c",
-	"CentCom" = 		"#90FD6D",
-	"Unknown"=			COLOR_JOB_UNKNOWN,
-))
 
 /**
   * # Chat Message Overlay
@@ -164,12 +157,9 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 			if(ishuman(target))
 				var/mob/living/carbon/human/H = target
 				if(H.wear_id?.GetID())
-					var/obj/item/card/id/idcard = H.wear_id
-					var/datum/job/wearer_job = SSjob.GetJob(idcard.GetJobName())
-					if(wearer_job)
-						tgt_color = wearer_job.chat_color
-					else
-						tgt_color = GLOB.job_colors_pastel[idcard.GetJobName()]
+					var/obj/item/card/id/idcard = H.wear_id.GetID()
+					if(idcard)
+						tgt_color = get_chatcolor_by_hud(idcard.hud_state)
 				else
 					tgt_color = COLOR_PERSON_UNKNOWN
 			else
@@ -298,9 +288,9 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 /mob/proc/should_show_chat_message(atom/movable/speaker, datum/language/message_language, is_emote = FALSE, is_heard = FALSE)
 	if(!client)
 		return CHATMESSAGE_CANNOT_HEAR
-	if(!client.prefs.chat_on_map || (!client.prefs.see_chat_non_mob && !ismob(speaker)))
+	if(!(client.prefs.toggles & PREFTOGGLE_RUNECHAT_GLOBAL) || (!(client.prefs.toggles & PREFTOGGLE_RUNECHAT_NONMOBS) && !ismob(speaker)))
 		return CHATMESSAGE_CANNOT_HEAR
-	if(!client.prefs.see_rc_emotes && is_emote)
+	if(!(client.prefs.toggles & PREFTOGGLE_RUNECHAT_EMOTES) && is_emote)
 		return CHATMESSAGE_CANNOT_HEAR
 	if(is_heard && !can_hear())
 		return CHATMESSAGE_CANNOT_HEAR
@@ -469,14 +459,14 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 		if(5)
 			return "#[num2hex(c, 2)][num2hex(m, 2)][num2hex(x, 2)]"
 
-/atom/proc/balloon_alert(mob/viewer, text)
+/atom/proc/balloon_alert(mob/viewer, text, color = null)
 	if(!viewer?.client)
 		return
 	switch(viewer.client.prefs.see_balloon_alerts)
 		if(BALLOON_ALERT_ALWAYS)
-			new /datum/chatmessage/balloon_alert(text, src, viewer)
+			new /datum/chatmessage/balloon_alert(text, src, viewer, color)
 		if(BALLOON_ALERT_WITH_CHAT)
-			new /datum/chatmessage/balloon_alert(text, src, viewer)
+			new /datum/chatmessage/balloon_alert(text, src, viewer, color)
 			to_chat(viewer, "<span class='notice'>[text].</span>")
 		if(BALLOON_ALERT_NEVER)
 			to_chat(viewer, "<span class='notice'>[text].</span>")
@@ -492,16 +482,29 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 		balloon_alert(hearer, (hearer == src && self_message) || message)
 
 /datum/chatmessage/balloon_alert
-	tgt_color = "#ffffff"
+	tgt_color = "#ffffff" //default color
 
-/datum/chatmessage/balloon_alert/New(text, atom/target, mob/owner)
+/datum/chatmessage/balloon_alert/New(text, atom/target, mob/owner, color)
 	if (!istype(target))
 		CRASH("Invalid target given for chatmessage")
 	if(QDELETED(owner) || !istype(owner) || !owner.client)
 		stack_trace("/datum/chatmessage created with [isnull(owner) ? "null" : "invalid"] mob owner")
 		qdel(src)
 		return
+	//handle color
+	if(color)
+		tgt_color = color
 	INVOKE_ASYNC(src, .proc/generate_image, text, target, owner)
+
+/datum/chatmessage/balloon_alert/Destroy()
+	if(!QDELETED(message_loc))
+		LAZYREMOVE(message_loc.balloon_alerts, src)
+	return ..()
+
+/datum/chatmessage/balloon_alert/end_of_life(fadetime = BALLOON_TEXT_FADE_TIME)
+	isFading = TRUE
+	animate(message, alpha = 0, pixel_y = message.pixel_y + MESSAGE_FADE_PIXEL_Y, time = fadetime, flags = ANIMATION_PARALLEL)
+	addtimer(CALLBACK(GLOBAL_PROC, /proc/qdel, src), fadetime, TIMER_DELETE_ME, SSrunechat)
 
 /datum/chatmessage/balloon_alert/generate_image(text, atom/target, mob/owner)
 	// Register client who owns this message
@@ -517,6 +520,14 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 		message_loc = target
 	else
 		message_loc = get_atom_on_turf(target)
+
+	if(LAZYLEN(message_loc.balloon_alerts))
+		for(var/datum/chatmessage/balloon_alert/m as() in message_loc.balloon_alerts)  //We get rid of old alerts so it doesn't clutter up the screen
+			if (!m.isFading)
+				var/sched_remaining = timeleft(m.fadertimer, SSrunechat)
+				if (sched_remaining)
+					deltimer(m.fadertimer, SSrunechat)
+				m.end_of_life()
 
 	// Build message image
 	message = image(loc = message_loc, layer = CHAT_LAYER)
@@ -538,25 +549,9 @@ GLOBAL_LIST_INIT(job_colors_pastel, list(
 		duration_mult += duration_length * BALLOON_TEXT_CHAR_LIFETIME_INCREASE_MULT
 
 	// Animate the message
-	animate(
-		message,
-		pixel_y = world.icon_size * 1.2,
-		time = BALLOON_TEXT_TOTAL_LIFETIME(1),
-		easing = SINE_EASING | EASE_OUT,
-	)
+	animate(message, alpha = 255, pixel_y = world.icon_size * 1.1, time = BALLOON_TEXT_SPAWN_TIME)
 
-	animate(
-		alpha = 255,
-		time = BALLOON_TEXT_SPAWN_TIME,
-		easing = CUBIC_EASING | EASE_OUT,
-		flags = ANIMATION_PARALLEL,
-	)
-
-	animate(
-		alpha = 0,
-		time = BALLOON_TEXT_FULLY_VISIBLE_TIME * duration_mult,
-		easing = CUBIC_EASING | EASE_IN,
-	)
+	LAZYADD(message_loc.balloon_alerts, src)
 
 	// Register with the runechat SS to handle EOL and destruction
 	var/duration = BALLOON_TEXT_TOTAL_LIFETIME(duration_mult)

@@ -33,6 +33,7 @@
 	var/key
 	var/name				//replaces mob/var/original_name
 	var/ghostname			//replaces name for observers name if set
+	/// The last living mob this mind occupied - if the player is dead, this is their body.
 	var/mob/living/current
 	var/active = 0
 
@@ -41,7 +42,6 @@
 	var/assigned_role
 	var/special_role
 	var/list/restricted_roles = list()
-
 	var/list/spell_list = list() // Wizard mode & "Give Spell" badmin button.
 
 	var/linglink
@@ -144,6 +144,11 @@
 		new_character.key = key		//now transfer the key to link the client to our new body
 	current.update_atom_languages()
 	SEND_SIGNAL(src, COMSIG_MIND_TRANSFER_TO, old_current, new_character)
+	// Update SSD indicators
+	if(isliving(old_current))
+		old_current.med_hud_set_status()
+	if(isliving(current))
+		current.med_hud_set_status()
 
 /datum/mind/proc/set_death_time()
 	SIGNAL_HANDLER
@@ -300,7 +305,7 @@
 	var/implant = FALSE
 
 	if(traitor_mob.client?.prefs)
-		switch(traitor_mob.client.prefs.uplink_spawn_loc)
+		switch(traitor_mob.client.prefs.active_character.uplink_spawn_loc)
 			if(UPLINK_PDA)
 				uplink_loc = PDA
 				if(!uplink_loc)
@@ -308,11 +313,19 @@
 				if(!uplink_loc)
 					uplink_loc = P
 			if(UPLINK_RADIO)
-				uplink_loc = R
-				if(!uplink_loc)
+				if(HAS_TRAIT(traitor_mob, TRAIT_MUTE))  // cant speak code into headset
+					to_chat(traitor_mob, "Using a radio uplink would be impossible with your muteness! Equipping PDA Uplink..")
 					uplink_loc = PDA
-				if(!uplink_loc)
-					uplink_loc = P
+					if(!uplink_loc)
+						uplink_loc = R
+					if(!uplink_loc)
+						uplink_loc = P
+				else
+					uplink_loc = R
+					if(!uplink_loc)
+						uplink_loc = PDA
+					if(!uplink_loc)
+						uplink_loc = P
 			if(UPLINK_PEN)
 				uplink_loc = P
 			if(UPLINK_IMPLANT)
@@ -324,12 +337,14 @@
 	if (!implant)
 		. = uplink_loc
 		var/datum/component/uplink/U = uplink_loc.AddComponent(/datum/component/uplink, traitor_mob.key, TRUE, FALSE, gamemode, telecrystals)
+		if(src.has_antag_datum(/datum/antagonist/incursion))
+			U.uplink_flag = UPLINK_INCURSION
 		if(!U)
 			CRASH("Uplink creation failed.")
 		U.setup_unlock_code()
 		if(!silent)
 			if(uplink_loc == R)
-				to_chat(traitor_mob, "<span class='boldnotice'>[employer] has cunningly disguised a Syndicate Uplink as your [R.name]. Simply dial the frequency [format_frequency(U.unlock_code)] to unlock its hidden features.</span>")
+				to_chat(traitor_mob, "<span class='boldnotice'>[employer] has cunningly disguised a Syndicate Uplink as your [R.name]. Simply speak [U.unlock_code] into the :d channel to unlock its hidden features.</span>")
 			else if(uplink_loc == PDA)
 				to_chat(traitor_mob, "<span class='boldnotice'>[employer] has cunningly disguised a Syndicate Uplink as your [PDA.name]. Simply enter the code \"[U.unlock_code]\" into the ringtone select to unlock its hidden features.</span>")
 			else if(uplink_loc == P)
@@ -603,6 +618,12 @@
 /datum/mind/proc/get_all_objectives()
 	return get_all_antag_objectives() | crew_objectives
 
+/datum/mind/proc/is_murderbone()
+	for(var/datum/objective/O as() in get_all_objectives())
+		if(O.murderbone_flag)
+			return TRUE
+	return FALSE
+
 /datum/mind/proc/announce_objectives()
 	var/obj_count = 1
 	var/list/antag_objectives = get_all_antag_objectives()
@@ -779,12 +800,12 @@
 //AI
 /mob/living/silicon/ai/mind_initialize()
 	..()
-	mind.assigned_role = "AI"
+	mind.assigned_role = JOB_NAME_AI
 
 //BORG
 /mob/living/silicon/robot/mind_initialize()
 	..()
-	mind.assigned_role = "Cyborg"
+	mind.assigned_role = JOB_NAME_CYBORG
 
 //PAI
 /mob/living/silicon/pai/mind_initialize()

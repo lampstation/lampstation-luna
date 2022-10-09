@@ -138,7 +138,7 @@ Contents:
 	ADD_TRAIT(n_hood, TRAIT_NODROP, NINJA_SUIT_TRAIT)
 	n_shoes = H.shoes
 	ADD_TRAIT(n_shoes, TRAIT_NODROP, NINJA_SUIT_TRAIT)
-	n_shoes.slowdown--
+	n_shoes.slowdown -= 0.5
 	n_gloves = H.gloves
 	ADD_TRAIT(n_gloves, TRAIT_NODROP, NINJA_SUIT_TRAIT)
 	return TRUE
@@ -172,7 +172,7 @@ Contents:
 	. = .()
 	if(s_initialized)
 		if(user == affecting)
-			. += "All systems operational. Current energy capacity: <B>[DisplayEnergy(cell.charge)]</B>.\n"+\
+			. += "All systems operational. Current energy capacity: <B>[display_energy(cell.charge)]</B>.\n"+\
 			"The CLOAK-tech device is <B>[stealth?"active":"inactive"]</B>.\n"+\
 			"There are <B>[s_bombs]</B> smoke bomb\s remaining.\n"+\
 			"There are <B>[a_boost]</B> adrenaline booster\s remaining."

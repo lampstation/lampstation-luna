@@ -100,12 +100,11 @@
 /datum/antagonist/changeling/proc/reset_properties()
 	changeling_speak = 0
 	chosen_sting = null
-	geneticpoints = initial(geneticpoints)
+	mimicing = ""
 	sting_range = initial(sting_range)
 	chem_recharge_rate = initial(chem_recharge_rate)
 	chem_charges = min(chem_charges, chem_storage)
 	chem_recharge_slowdown = initial(chem_recharge_slowdown)
-	mimicing = ""
 
 /datum/antagonist/changeling/proc/remove_changeling_powers()
 	if(ishuman(owner.current) || ismonkey(owner.current))
@@ -113,6 +112,7 @@
 		for(var/datum/action/changeling/p in purchasedpowers)
 			purchasedpowers -= p
 			p.Remove(owner.current)
+			geneticpoints += p.dna_cost
 
 	//MOVE THIS
 	if(owner.current.hud_used?.lingstingdisplay)
@@ -276,9 +276,10 @@
 	prof.socks = H.socks
 
 	if(H.wear_id?.GetID())
-		var/obj/item/card/id/I = H.wear_id
+		var/obj/item/card/id/I = H.wear_id.GetID()
 		if(istype(I))
 			prof.id_job_name = I.assignment
+			prof.id_hud_state = I.hud_state
 
 	var/list/slots = list("head", "wear_mask", "back", "wear_suit", "w_uniform", "shoes", "belt", "gloves", "glasses", "ears", "wear_id", "s_store")
 	for(var/slot in slots)
@@ -338,8 +339,8 @@
 	if(isipc(C))
 		C.set_species(/datum/species/human)
 		var/replacementName = random_unique_name(C.gender)
-		if(C.client.prefs.custom_names["human"])
-			C.fully_replace_character_name(C.real_name, C.client.prefs.custom_names["human"])
+		if(C.client.prefs.active_character.custom_names["human"])
+			C.fully_replace_character_name(C.real_name, C.client.prefs.active_character.custom_names["human"])
 		else
 			C.fully_replace_character_name(C.real_name, replacementName)
 	if(ishuman(C))
@@ -516,6 +517,7 @@
 
 	/// ID HUD icon associated with the profile
 	var/id_job_name
+	var/id_hud_state
 
 /datum/changelingprofile/Destroy()
 	qdel(dna)
@@ -539,6 +541,7 @@
 	newprofile.undershirt = undershirt
 	newprofile.socks = socks
 	newprofile.id_job_name = id_job_name
+	newprofile.id_hud_state = id_hud_state
 
 /datum/antagonist/changeling/xenobio
 	name = "Xenobio Changeling"

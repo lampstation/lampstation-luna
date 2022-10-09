@@ -40,8 +40,8 @@ BADGES
 ## To speed things up make the number negative, to slow things down, make the number positive.
 
 ## These modify the run/walk speed of all mobs before the mob-specific modifiers are applied.
-RUN_DELAY 1.5
-WALK_DELAY 3
+RUN_DELAY 2
+WALK_DELAY 3.5
 
 ## The variables below affect the movement of specific mob types. THIS AFFECTS ALL SUBTYPES OF THE TYPE YOU CHOOSE!
 ## Entries completely override all subtypes. Later entries have precedence over earlier entries.
@@ -104,6 +104,7 @@ PROBABILITY TRAITOR 8
 PROBABILITY CULT 6
 PROBABILITY TRAITORCHAN 5
 PROBABILITY CHANGELING 5
+PROBABILITY ASSIMILATION 4
 PROBABILITY REVOLUTION 4
 PROBABILITY INCURSION 4
 PROBABILITY NUCLEAR 4
@@ -116,7 +117,6 @@ PROBABILITY GANG 0
 PROBABILITY HERESY 0
 PROBABILITY INTERNAL_AFFAIRS 0
 PROBABILITY METEOR 0
-PROBABILITY MONKEY 0
 PROBABILITY TRAITORBRO 0
 PROBABILITY WIZARD 0
 
@@ -143,10 +143,10 @@ CONTINUOUS INTERNAL_AFFAIRS
 CONTINUOUS CULT
 CONTINUOUS CHANGELING
 CONTINUOUS WIZARD
-#CONTINUOUS MONKEY
 CONTINUOUS HIVEMIND
 CONTINUOUS CLOCKCULT
 CONTINUOUS HERESY
+CONTINUOUS ASSIMILATION
 
 #Prevents the death of round-ending antagonist rulesets ending the round immediately.
 
@@ -172,7 +172,6 @@ MIDROUND_ANTAG INTERNAL_AFFAIRS
 MIDROUND_ANTAG CULT
 MIDROUND_ANTAG CHANGELING
 MIDROUND_ANTAG WIZARD
-#MIDROUND_ANTAG  MONKEY
 
 ## Uncomment these for overrides of the minimum / maximum number of players in a round type.
 ## If you set any of these occasionally check to see if you still need them as the modes
@@ -207,9 +206,6 @@ MAX_POP CHANGELING -1
 MIN_POP WIZARD 20
 MAX_POP WIZARD -1
 
-MIN_POP MONKEY 20
-MAX_POP MONKEY -1
-
 MIN_POP METEOR 0
 MAX_POP METEOR -1
 
@@ -232,6 +228,9 @@ MAX_POP CLOCKCULT -1
 MIN_POP HERESY 25
 MAX_POP HERESY -1
 
+MIN_POP ASSIMILATION 0
+MAX_POP ASSIMILATION -1
+
 ## The amount of time it takes for the emergency shuttle to be called, from round start.
 SHUTTLE_REFUEL_DELAY 12000
 
@@ -250,7 +249,7 @@ SECURITY_SCALING_COEFF 10
 
 ## The number of objectives traitors get.
 ## Not including escaping/hijacking.
-TRAITOR_OBJECTIVES_AMOUNT 2
+TRAITOR_OBJECTIVES_AMOUNT 3
 BROTHER_OBJECTIVES_AMOUNT 2
 
 ## Uncomment to prohibit jobs that start with loyalty

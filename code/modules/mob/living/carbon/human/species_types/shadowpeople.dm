@@ -178,6 +178,7 @@
 /obj/item/light_eater/Initialize(mapload)
 	. = ..()
 	ADD_TRAIT(src, TRAIT_NODROP, HAND_REPLACEMENT_TRAIT)
+	ADD_TRAIT(src, TRAIT_DOOR_PRYER, INNATE_TRAIT)
 	AddComponent(/datum/component/butchering, 80, 70)
 
 /obj/item/light_eater/afterattack(atom/movable/AM, mob/user, proximity)
@@ -208,15 +209,19 @@
 
 /mob/living/silicon/robot/lighteater_act(obj/item/light_eater/light_eater)
 	..()
-	if(!lamp_cooldown)
-		update_headlamp(TRUE, INFINITY)
-		to_chat(src, "<span class='danger'>Your headlamp is fried! You'll need a human to help replace it.</span>")
+	if(lamp_enabled)
+		smash_headlamp()
 
 /obj/structure/bonfire/lighteater_act(obj/item/light_eater/light_eater)
 	if(burning)
 		extinguish()
 		playsound(src, 'sound/items/cig_snuff.ogg', 50, 1)
 	..()
+
+/obj/structure/glowshroom/lighteater_act(obj/item/light_eater/light_eater)
+	..()
+	if (light_power > 0)
+		acid_act()
 
 /obj/item/lighteater_act(obj/item/light_eater/light_eater)
 	..()
@@ -229,7 +234,7 @@
 
 
 /obj/item/pda/lighteater_act(obj/item/light_eater/light_eater)
-	if(light_range && light_power && light_on)
+	if(light_range && light_power > 0 && light_on)
 		//Eject the ID card
 		if(id)
 			id.forceMove(get_turf(src))
@@ -237,6 +242,15 @@
 			update_icon()
 			playsound(src, 'sound/machines/terminal_eject.ogg', 50, TRUE)
 	..()
+
+/turf/open/floor/light/lighteater_act(obj/item/light_eater/light_eater)
+	. = ..()
+	if(!light_range || !light_power || !light_on)
+		return
+	if(light_eater)
+		visible_message("<span class='danger'>The light bulb of [src] is disintegrated by [light_eater]!</span>")
+	break_tile()
+	playsound(src, 'sound/items/welder.ogg', 50, 1)
 
 #undef HEART_SPECIAL_SHADOWIFY
 #undef HEART_RESPAWN_THRESHHOLD

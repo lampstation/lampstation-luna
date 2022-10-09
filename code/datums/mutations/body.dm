@@ -92,14 +92,16 @@
 /datum/mutation/dwarfism/on_acquiring(mob/living/carbon/owner)
 	if(..())
 		return
-	owner.transform = owner.transform.Scale(1, 0.8)
+	owner.resize = 0.8
+	owner.update_transform()
 	passtable_on(owner, GENETIC_MUTATION)
 	owner.visible_message("<span class='danger'>[owner] suddenly shrinks!</span>", "<span class='notice'>Everything around you seems to grow..</span>")
 
 /datum/mutation/dwarfism/on_losing(mob/living/carbon/owner)
 	if(..())
 		return
-	owner.transform = owner.transform.Scale(1, 1.25)
+	owner.resize = 1.25
+	owner.update_transform()
 	passtable_off(owner, GENETIC_MUTATION)
 	owner.visible_message("<span class='danger'>[owner] suddenly grows!</span>", "<span class='notice'>Everything around you seems to shrink..</span>")
 
@@ -172,6 +174,7 @@
 	quality = NEGATIVE
 	mobtypes_allowed = list(/mob/living/carbon/human, /mob/living/carbon/monkey)
 	locked = TRUE //Species specific, keep out of actual gene pool
+	mutadone_proof = TRUE
 
 /datum/mutation/race/on_acquiring(mob/living/carbon/human/owner)
 	if(..())
